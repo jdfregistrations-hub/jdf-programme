@@ -1,3 +1,6 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Jaipur Design Festival Programme</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;700&family=DM+Sans:wght@400;500&display=swap">
 <style>
@@ -43,29 +46,35 @@ input:focus,select:focus,textarea:focus{outline:2px solid var(--exh);outline-off
 .err{color:#d6336c;font-size:12px;flex-basis:100%}
 .add{margin-top:12px}
 .note{color:var(--mute);font-size:13px;margin:12px 0 0}
-.det{margin-top:32px}
-.det h2{font:700 18px 'Bricolage Grotesque',sans-serif;margin:0 0 4px}
-.dt{padding:16px 0;border-bottom:1px solid var(--line)}
-.dt h3{font:700 18px/1.2 'Bricolage Grotesque',system-ui,sans-serif;margin:0 0 2px}
-.dt .dm{color:var(--mute);font-size:13px;margin:0 0 8px}
-.dt p{margin:0 0 8px;max-width:68ch}
-.dt ul{list-style:none;margin:8px 0 0;padding:0}
-.dt li{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,2fr) minmax(0,1fr);gap:4px 16px;padding:8px 0;border-top:1px solid var(--line);font-size:14px}
-.dt li b{font-weight:500}
-.dt li span{color:var(--mute)}
-.dt li em{font-style:normal}
-.row .more{flex-basis:100%}
-.row .more summary{cursor:pointer;color:var(--mute);font-size:13px}
-.row textarea{width:100%;margin-top:6px;resize:vertical}
-@media (max-width:640px){.dt li{grid-template-columns:minmax(0,1fr)}}
-@media print{.edit,.tabs{display:none}.hs{overflow:visible}}
+[hidden]{display:none!important}
+.hint{color:var(--mute);font-size:13px;margin:12px 0 0}
+.blk{cursor:pointer}
+.blk:focus-visible{outline:2px solid var(--exh);outline-offset:2px}
+.blk:hover{filter:brightness(1.06)}
+.dlg{position:fixed;inset:0;z-index:20;background:rgba(10,9,30,.55);display:flex;align-items:center;justify-content:center;padding:16px;padding-top:max(16px,env(safe-area-inset-top,0px));padding-bottom:max(16px,env(safe-area-inset-bottom,0px))}
+.panel{position:relative;background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:12px;max-width:640px;width:100%;max-height:100%;overflow-y:auto;padding:24px 20px 20px}
+.dclose{position:absolute;top:12px;right:12px;font:500 14px 'DM Sans',sans-serif;background:none;color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:6px 12px;cursor:pointer}
+.dclose:hover{border-color:var(--exh)}
+.chip{display:inline-block;font-size:12px;font-weight:500;border-radius:999px;padding:2px 10px;margin-bottom:10px}
+.panel h3{font:700 22px/1.2 'Bricolage Grotesque',system-ui,sans-serif;margin:0 56px 4px 0;text-wrap:balance}
+.panel .dm{color:var(--mute);font-size:13px;margin:0 0 12px}
+.panel p{margin:0 0 10px}
+.panel ul{list-style:none;margin:12px 0 0;padding:0}
+.panel li{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,2fr) minmax(0,1fr);gap:4px 16px;padding:10px 0;border-top:1px solid var(--line);font-size:14px}
+.panel li b{font-weight:500}
+.panel li span{color:var(--mute)}
+.panel li em{font-style:normal}
+@media (max-width:640px){.panel li{grid-template-columns:minmax(0,1fr)}}
+@media print{.tabs,.dlg,.hint{display:none}.hs{overflow:visible}}
 </style>
+</head><body>
 <div class="wrap">
 <h1 id="h1">Jaipur Design Festival 2026</h1>
 <p class="sub" id="sub">Programme · 16–18 November 2026</p>
 <div class="tabs" id="tabs" role="tablist"></div>
 <div id="grid"></div>
-<section class="det" id="det"></section>
+<div class="dlg" id="dlg" hidden><div class="panel" role="dialog" aria-modal="true" aria-labelledby="dtitle"><button class="dclose" id="dclose" aria-label="Close details">Close</button><div id="dbody"></div></div></div>
+<p class="hint">Select a session to see its details.</p>
 </div>
 <script>
 var KEY='jdf-schedule-v3',ALL='All venues',cur=0,VO=['Krishnayan','Surekh','Sudarshan','Madhyavarti','Alankar','Sukriti'];
@@ -81,19 +90,19 @@ function esc(s){return String(s).replace(/[&<>"]/g,function(c){return{'&':'&amp;
 function ok(x){return m(x.e)>m(x.s)}
 function ov(p,q){return p.v===q.v&&m(p.s)<m(q.e)&&m(q.s)<m(p.e)}
 function bl(x){var t=x.d;if(!t&&x.p){var ls=x.p.split('\n');for(var i=0;i<ls.length;i++)if(ls[i].trim()&&ls[i].indexOf('||')<0){t=ls[i].trim();break}}return t||''}
-function det(){
-var el=document.getElementById('det'),ss=state.days[cur].sessions.filter(function(x){return x.p&&ok(x)}).sort(function(a,b){return m(a.s)-m(b.s)});
-if(!ss.length){el.innerHTML='';return}
-el.innerHTML='<h2>Session details</h2>'+ss.map(function(x){var ps='',rows='';
-x.p.split('\n').forEach(function(l){l=l.trim();if(!l)return;
+var CUR=[];
+function openD(i){var x=CUR[i];if(!x)return;var ps='',rows='';
+(x.p||'').split('\n').forEach(function(l){l=l.trim();if(!l)return;
 if(l.indexOf('||')>=0){var c=l.split('||').map(function(s){return s.trim()});rows+='<li><b>'+esc(c[0])+'</b><span>'+esc(c[1]||'')+'</span><em>'+esc(c[2]||'')+'</em></li>'}else ps+='<p>'+esc(l)+'</p>'});
-return'<article class="dt"><h3>'+esc(x.t)+'</h3><p class="dm">'+fmt(m(x.s))+' – '+fmt(m(x.e))+' · '+esc(x.v)+'</p>'+ps+(rows?'<ul>'+rows+'</ul>':'')+'</article>'}).join('')
-}
-function bk(x,left,w,top,ht){var dd=bl(x),has=x.f||dd;return'<div class="blk '+x.k+(has?' has':'')+'" title="'+esc([x.t,x.f,dd].filter(Boolean).join(' · '))+'" style="left:'+left+'px;width:'+w+'px;top:'+top+'px;height:'+ht+'px"><b>'+esc(x.t)+'</b><small>'+(x.f?esc(x.f)+' · ':'')+fmt(m(x.s))+' – '+fmt(m(x.e))+'</small>'+(dd?'<span class="d">'+esc(dd)+'</span>':'')+'</div>'}
+var meta=fmt(m(x.s))+' – '+fmt(m(x.e))+' · '+esc(x.v)+(x.f?' · '+esc(x.f):'');
+var own=(!x.p&&x.d)?'<p>'+esc(x.d)+'</p>':'';
+document.getElementById('dbody').innerHTML='<span class="chip '+x.k+'">'+esc(KINDS[x.k]||'')+'</span><h3 id="dtitle">'+esc(x.t)+'</h3><p class="dm">'+meta+'</p>'+ps+own+(rows?'<ul>'+rows+'</ul>':'');
+var d=document.getElementById('dlg');d.hidden=false;document.body.style.overflow='hidden';document.getElementById('dclose').focus()}
+function closeD(){document.getElementById('dlg').hidden=true;document.body.style.overflow=''}
+function bk(x,left,w,top,ht,j){var dd=bl(x),has=x.f||dd;return'<div class="blk '+x.k+(has?' has':'')+'" role="button" tabindex="0" data-i="'+j+'" title="'+esc([x.t,x.f,dd].filter(Boolean).join(' · '))+'" style="left:'+left+'px;width:'+w+'px;top:'+top+'px;height:'+ht+'px"><b>'+esc(x.t)+'</b><small>'+(x.f?esc(x.f)+' · ':'')+fmt(m(x.s))+' – '+fmt(m(x.e))+'</small>'+(dd?'<span class="d">'+esc(dd)+'</span>':'')+'</div>'}
 function grid(){
-det();
 var el=document.getElementById('grid'),ss=state.days[cur].sessions.filter(ok).sort(function(a,b){return m(a.s)-m(b.s)});
-if(!ss.length){el.innerHTML='<p class="empty">No sessions for this day yet. Add one below.</p>';return}
+CUR=ss;if(!ss.length){el.innerHTML='<p class="empty">No sessions for this day yet.</p>';return}
 var vs=[];ss.forEach(function(x){if(x.v&&x.v!==ALL&&vs.indexOf(x.v)<0)vs.push(x.v)});
 vs.sort(function(p,q){var i=VO.indexOf(p),j=VO.indexOf(q);return(i<0?99:i)-(j<0?99:j)});
 if(!vs.length)vs.push('Main stage');
@@ -109,9 +118,9 @@ for(var t=a;t<=b;t+=60)h+='<span style="left:'+(t-a)/60*PXH+'px'+(t===b?';transf
 h+='</div>';
 vs.forEach(function(v,r){
 h+='<div class="hr" style="height:'+rh[r]+'px"><div class="vl">'+esc(v)+'</div><div class="hp" style="width:'+W+'px;height:'+rh[r]+'px;background:repeating-linear-gradient(to right,var(--line) 0 1px,transparent 1px '+PXH+'px)">';
-ss.forEach(function(x,j){if(x.v!==v)return;var N=NN[j];h+=bk(x,(m(x.s)-a)/60*PXH+2,(m(x.e)-m(x.s))/60*PXH-4,LN[j]/N*rh[r]+2,rh[r]/N-4)});
+ss.forEach(function(x,j){if(x.v!==v)return;var N=NN[j];h+=bk(x,(m(x.s)-a)/60*PXH+2,(m(x.e)-m(x.s))/60*PXH-4,LN[j]/N*rh[r]+2,rh[r]/N-4,j)});
 h+='</div></div>'});
-ss.forEach(function(x){if(vs.indexOf(x.v)>=0)return;h+=bk(x,LW+(m(x.s)-a)/60*PXH+2,(m(x.e)-m(x.s))/60*PXH-4,HH+2,tot-4)});
+ss.forEach(function(x,j){if(vs.indexOf(x.v)>=0)return;h+=bk(x,LW+(m(x.s)-a)/60*PXH+2,(m(x.e)-m(x.s))/60*PXH-4,HH+2,tot-4,j)});
 el.innerHTML=h+'</div></div>';
 }
 function tabs(){
@@ -119,6 +128,14 @@ var el=document.getElementById('tabs');el.innerHTML='';
 state.days.forEach(function(d,i){var b=document.createElement('button');b.className='tab'+(i===cur?' on':'');b.setAttribute('role','tab');b.textContent='Day '+(i+1)+' · '+d.label;b.onclick=function(){cur=i;tabs();grid()};el.appendChild(b)})
 }
 document.getElementById('h1').textContent=state.title;document.getElementById('sub').textContent=state.sub;
+var gd=document.getElementById('grid');
+gd.addEventListener('click',function(e){var b=e.target.closest('.blk');if(b)openD(+b.getAttribute('data-i'))});
+gd.addEventListener('keydown',function(e){if(e.key!=='Enter'&&e.key!==' ')return;var b=e.target.closest('.blk');if(b){e.preventDefault();openD(+b.getAttribute('data-i'))}});
+document.getElementById('dclose').addEventListener('click',closeD);
+document.getElementById('dlg').addEventListener('click',function(e){if(e.target.id==='dlg')closeD()});
+document.addEventListener('keydown',function(e){if(e.key==='Escape')closeD()});
 var rz;window.addEventListener('resize',function(){clearTimeout(rz);rz=setTimeout(grid,120)});
 tabs();grid();
 </script>
+
+</body></html>
